@@ -2,21 +2,72 @@ import React, { Component, useState } from "react";
 import {Alert, View, StyleSheet,Text,TouchableOpacity,Dimensions } from "react-native";
 import {Picker} from '@react-native-community/picker';
 import PropertyFacilities from '../PropertyFacilities/PropertyFacilities';
+import axios from 'axios';
+
+import AsyncStorage from '@react-native-community/async-storage';
+import Toast from 'react-native-toast-message';
+import { connect } from 'react-redux';
 const width=Dimensions.get('window').width;
 class PropertyType extends Component {
 
-    state = {
-        propertyType: 0,
-        shouldRender:true
-      }
+    constructor(props){
+      super(props);
+     
+
+      
+    }
+
+    componentDidMount=async()=>{
+        if(1>this.props.stepsCompleted){
+          this.props.setAll(0,true,true)
+        }
+        else{
+          const value = await AsyncStorage.getItem('propertyTypebhk'+this.props.propertyListedNumber);
+          
+          this.props.setAll(value,false,true);
+          
+        }
+    }
+    
       
       render(){
-        const onPress = () => {
-            if(this.state.propertyType==0){
+        // console.log(this.props.stepsCompleted);0
+        // console.log(this.props.propertyListedNumber);1
+
+        var stepsCompleted;
+        const onPress = async() => {
+        
+            if(this.props.propertyType==0){
                 alert('please select option from dropdown')
             }
             else{
-            this.setState({shouldRender:false});
+              await AsyncStorage.setItem('propertyTypebhk'+this.props.propertyListedNumber,this.props.propertyType);
+              await AsyncStorage.setItem('property'+this.props.propertyListedNumber,'1');
+              var data={
+                "property-type":this.props.propertyType
+              }
+              
+              axios.post('https://5f7aff0f40abc60016472a92.mockapi.io/submitdata_all', JSON.parse(JSON.stringify(data)))
+          .then(function (response) {
+            Toast.show({
+              text1: 'Successfully sent to server',
+              text2: JSON.stringify(data)
+            });
+            
+              
+            
+        
+          })
+          .catch(function (error) {
+            Toast.show({
+              text1: 'Oops Something Bad Happend',
+            
+            });
+             
+            console.log(error);
+          });
+              
+              this.props.setShouldRender(false);
             }
             
 
@@ -24,7 +75,7 @@ class PropertyType extends Component {
         }
           return (
               
-             this.state.shouldRender? <View 
+          this.props.propertyAlreadySelected?   this.props.showRender? <View 
                     style={{
                         flex: 1,
                         flexDirection: 'column',
@@ -34,7 +85,7 @@ class PropertyType extends Component {
                     }}>
                     <Text style={{fontWeight:'bold',fontSize:25,marginBottom:20}}>Please select Property Type</Text>
             <Picker
-            selectedValue={this.state.propertyType}
+            selectedValue={this.props.propertyType}
             style=
                 {{
                     
@@ -47,7 +98,7 @@ class PropertyType extends Component {
                 console.log(itemValue)
                 
                 
-                this.setState({propertyType: itemValue})
+                this.props.add(itemValue)
                 
             }
               
@@ -73,19 +124,42 @@ class PropertyType extends Component {
         <Text style={{color:'#ffffff',
         fontWeight:'bold'}}>Next</Text>
       </TouchableOpacity>
-    </View>:<PropertyFacilities propertyType={this.state.propertyType} />
+    </View>:<PropertyFacilities 
+    propertyType={this.props.propertyType}
+    stepsCompleted={this.props.stepsCompleted==0? 1:this.props.stepsCompleted}
+    propertyListedNumber={this.props.propertyListedNumber}
+    
+    
+    
+    
+     /> :null
            
           )
       }
       
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 40,
-    alignItems: "center"
+// console.log(this.props.stepsCompleted);0
+        // console.log(this.props.propertyListedNumber);1
+const mapStateToProps = (state) => {
+  //console.log(state);
+  return {
+    propertyType: state.PropertyReducer.propertyType,
+    showRender:state.PropertyReducer.showRender,
+    propertyAlreadySelected:state.PropertyReducer.propertyAlreadySelected
   }
-});
+}
 
-export default PropertyType;
+
+const mapDispatchToProps = (dispatch) => {
+ 
+  return {
+    setShouldRender: (value) => dispatch({type:'SET_PROPERTY_SHOW_RENDER',data:value}),
+    add: (value) => dispatch({type:'SET_PROPERTY_TYPE',data:value}),
+    setAll:(data,showRender,propertyAlreadySelected)=> dispatch({type:'SET_ALL',data:data,showRender:showRender,propertyAlreadySelected:propertyAlreadySelected})
+    
+  }
+}
+
+
+
+export default connect(mapStateToProps,mapDispatchToProps)(PropertyType);

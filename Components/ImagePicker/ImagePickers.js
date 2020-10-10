@@ -2,7 +2,10 @@ import React, { Component, useState } from "react";
 import { View, StyleSheet,Text,TouchableOpacity,Switch,TextInput,FlatList,Dimensions,Image,Platform} from "react-native";
 import {ActionSheet,Root} from "native-base";
 import ImagePicker from 'react-native-image-picker';
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
 import RNFetchBlob from 'rn-fetch-blob';
+import AsyncStorage from '@react-native-community/async-storage';
 import Success from '../Success/Success'
 const width=Dimensions.get('window').width;
 export default class ImagePickers extends Component{
@@ -12,8 +15,27 @@ export default class ImagePickers extends Component{
         this.state={
             fileList:[],
             response:[],
-            showRender:true
+            showRender:false,
+            isRender:false
         }
+    }
+
+
+    componentDidMount=async()=>{
+        if(5>this.props.stepsCompleted){
+            this.setState({
+                showRender:true
+            })
+          }
+          else{
+            
+            
+            this.setState({
+                showRender:false,
+                isRender:true
+            })
+            
+          }
     }
 
     onClickAddImage=()=>{
@@ -43,11 +65,12 @@ export default class ImagePickers extends Component{
         
     }
 
-    onSubmit=()=>{
+    onSubmit=async()=>{
         
-        
+        await AsyncStorage.setItem('property'+this.props.propertyListedNumber,'5')
        this.setState({
-           showRender:false
+           showRender:false,
+           isRender:true
        })
         
       
@@ -65,6 +88,8 @@ export default class ImagePickers extends Component{
     };
 
     render(){
+        console.log('abhi'+this.props.stepsCompleted);
+         console.log('abhi'+this.props.propertyListedNumber);
         //console.log(this.props)
         let {content,btnPressStyle,txtStyle,submitImage}=styles;
         //console.log(this.state);
@@ -87,13 +112,13 @@ export default class ImagePickers extends Component{
                      <Text style={txtStyle}>Submit</Text>
                  </TouchableOpacity>
             </View>
-            </Root>:<Success
+            </Root>:this.state.isRender?<Success
                     user_id='455'
                     room_type={this.props.propertyType}
-                     property_service={this.props.propertyFacilities}
+                    
                      room_numbers={this.props.numberOfRooms}
-                     roomFacilities={this.props.roomFacilities}
-                     images={this.state.response} />
+                     
+                      />:null
             
         );
            

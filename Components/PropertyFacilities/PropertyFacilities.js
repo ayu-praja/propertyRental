@@ -1,37 +1,66 @@
 import React, { Component, useState } from "react";
 import { View, StyleSheet,Text,TouchableOpacity,Switch,Dimensions } from "react-native";
-import NumberOfRooms from '../NumberOfRooms/NumberOfRooms'
+import { connect } from "react-redux";
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import NumberOfRooms from '../NumberOfRooms/NumberOfRooms';
+import AsyncStorage from '@react-native-community/async-storage'
 const width=Dimensions.get('window').width;
-export default class PropertyFacilities extends Component {
+class PropertyFacilities extends Component {
     constructor(props) {
     super(props);
-    this.state = {  
-        gym: false ,
-        pool:false,
-        tablettennis:false,
-        garden:false,
-        shouldRender:true,
-        selectedFacility:[],
-        listOfFacilities:[]
-    };  
+     
 }
     
-  
+componentDidMount(){
+    if(2>this.props.stepsCompleted){
+      this.props.setBoolean(true,true);
+    }
+    else{
+      
+      
+      this.props.setBoolean(true,false);
+      
+    }
+}
     
     render(){
         let facilities=[]
         var listOfFacility;
-       // console.log(this.props)
-        const onPress=()=>{
-            
-          
-        listOfFacility={...this.state};
-          delete listOfFacility.shouldRender;
-          delete listOfFacility.selectedFacility;
-          delete listOfFacility.listOfFacilities;
-         // console.log(listOfFacility);
+       //console.log('abhi wala'+this.props.propertyType)
+      // console.log('abhi wala'+this.props.stepsCompleted)
+      const onPress = async() => {
+            listOfFacility={
+                "gym":this.props.gym,
+                "pool":this.props.pool,
+                "tabletennis":this.props.tabletennis,
+                "garden":this.props.garden
+            }
+          console.log(listOfFacility);
+          this.props.setShouldRender();
+        //   this.setState({shouldRender:false,listOfFacilities:listOfFacility})
+        await AsyncStorage.setItem('property'+this.props.propertyListedNumber,'2');
 
-          this.setState({shouldRender:false,listOfFacilities:listOfFacility})
+
+        axios.post('https://5f7aff0f40abc60016472a92.mockapi.io/submitdata_all', JSON.parse(JSON.stringify(listOfFacility)))
+          .then(function (response) {
+            Toast.show({
+              text1: 'Successfully sent to server',
+              text2: JSON.stringify(listOfFacility)
+            });
+            
+              
+            
+        
+          })
+          .catch(function (error) {
+            Toast.show({
+              text1: 'Oops Something Bad Happend',
+            
+            });
+             
+            console.log(error);
+          });
           
          
         }
@@ -41,7 +70,7 @@ export default class PropertyFacilities extends Component {
        
         return (
             
-            this.state.shouldRender?    <View
+       this.props.shouldSelect?     this.props.shouldRender ?    <View
                
                 style={{
                         flex: 1,
@@ -65,12 +94,9 @@ export default class PropertyFacilities extends Component {
                     }}>
                     <Text style={{fontWeight:'bold'}}>Gym: </Text>
                         <Switch  
-                    value={this.state.gym}  
+                    value={this.props.gym}  
                     onValueChange ={(switchValue)=>{
-                     this.setState(prevState => ({
-                            gym: !prevState.gym,
-                            selectedFacility: [...this.state.selectedFacility,'Gym']
-                            }));
+                    this.props.setGym();
                         
                         }
                         
@@ -85,12 +111,9 @@ export default class PropertyFacilities extends Component {
                     }}>
                     <Text style={{fontWeight:'bold'}}>Pool: </Text>
                         <Switch  
-                    value={this.state.pool}  
+                    value={this.props.pool}  
                     onValueChange ={(switchValue)=>{
-                     this.setState(prevState => ({
-                            pool: !prevState.pool,
-                            selectedFacility: [...this.state.selectedFacility,'Pool']
-                            }));
+                        this.props.setPool();
                         
                         }
                         
@@ -106,12 +129,9 @@ export default class PropertyFacilities extends Component {
                     }}>
                     <Text style={{fontWeight:'bold'}}>Table Tennis: </Text>
                         <Switch  
-                    value={this.state.tablettennis}  
+                    value={this.props.tabletennis}  
                     onValueChange ={(switchValue)=>{
-                     this.setState(prevState => ({
-                        tablettennis: !prevState.tablettennis,
-                        selectedFacility: [...this.state.selectedFacility,'Table Tennis']
-                            }));
+                        this.props.setTableTennis();
                         
                         }
                         
@@ -126,12 +146,9 @@ export default class PropertyFacilities extends Component {
                     }}>
                     <Text style={{fontWeight:'bold'}}>Garden: </Text>
                         <Switch  
-                    value={this.state.garden}  
+                    value={this.props.garden}  
                     onValueChange ={(switchValue)=>{
-                     this.setState(prevState => ({
-                        garden: !prevState.garden,
-                        selectedFacility: [...this.state.selectedFacility,'Garden']
-                            }));
+                        this.props.setGarden();
                         
                         }
                         
@@ -157,7 +174,42 @@ export default class PropertyFacilities extends Component {
         fontWeight:'bold'}}>Next</Text>
       </TouchableOpacity>
 
-            </View>:<NumberOfRooms  propertyType={this.props.propertyType} propertyFacilities={this.state.listOfFacilities}/>
+            </View>:<NumberOfRooms 
+             propertyType={this.props.propertyType}
+             stepsCompleted={this.props.stepsCompleted==1? 2:this.props.stepsCompleted}
+              propertyListedNumber={this.props.propertyListedNumber}
+
+             />:null
         )
     }
 }
+
+const mapStateToProps = (state) => {
+    //console.log(state);
+    return {
+      gym: state.PropertyFacilityReducer.gym,
+      pool:state.PropertyFacilityReducer.pool,
+      tabletennis:state.PropertyFacilityReducer.tabletennis,
+      garden:state.PropertyFacilityReducer.garden,
+      shouldRender:state.PropertyFacilityReducer.shouldRender,
+      shouldSelect:state.PropertyFacilityReducer.shouldSelect
+    }
+  }
+  
+  
+  const mapDispatchToProps = (dispatch) => {
+   
+    return {
+      setGym: () => dispatch({type:'SET_GYM'}),
+      setPool: () => dispatch({type:'SET_POOL'}),
+      setTableTennis: () => dispatch({type:'SET_TABLE_TENNIS'}),
+      setGarden: () => dispatch({type:'SET_GARDEN'}),
+      setShouldRender:()=>dispatch({type:'SET_SHOW_RENDER'}),
+      setBoolean:(shouldSelect,shouldRender)=>dispatch({type:'SET_BOOLEAN',shouldSelect:shouldSelect,shouldRender:shouldRender})
+      
+    }
+  }
+
+  export default connect(mapStateToProps,mapDispatchToProps)(PropertyFacilities)
+
+  

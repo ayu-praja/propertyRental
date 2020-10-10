@@ -1,23 +1,20 @@
 import React, { Component, useState } from "react";
 import {Alert, View, StyleSheet,Text,TouchableOpacity,Switch,ScrollView,Dimensions } from "react-native";
-import ImagePicker from '../ImagePicker/ImagePickers'
+import ImagePicker from '../ImagePicker/ImagePickers';
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-community/async-storage';
+import { connect } from 'react-redux';
 const width=Dimensions.get('window').width;
 
 
-export default class RoomFacilities extends Component{
+class RoomFacilities extends Component{
 
     constructor(props){
         
         super(props);
         
-        this.state = {  
-            roomFacility:[],
-            showRender:false,
-            showImagePicker:false
-            
-        
-            
-        }; 
+       
     }
 
     componentDidMount(){
@@ -48,17 +45,26 @@ export default class RoomFacilities extends Component{
                 
             }])
         }
-        this.setState(prevState => ({
-            roomFacility:a,
-            showRender:true
-            }));
+        
 
+          //normal situation
+
+            if(4>this.props.stepsCompleted){
+                this.props.setAll(a,true,false);
+              }
+              else{
+                
+                
+                this.props.setAll(a,false,true);
+                
+              }
             
     }
    
 
     render(){
-        
+        // console.log('abhi'+this.props.stepsCompleted);
+        //  console.log('abhi'+this.props.propertyListedNumber);
         var numberOfRooms=[];
         for(let i=0;i<this.props.numberOfRooms;i++){
             
@@ -67,17 +73,37 @@ export default class RoomFacilities extends Component{
 
         }
         //console.log(this.state)
-        const onPress = () => {
-                this.setState({
-                    showRender:false,
-                    showImagePicker:true
-                })
+        const onPress =async () => {
+            var data={...this.props.roomFacility};
+            console.log('datas'+JSON.stringify(data))
+            axios.post('https://5f7aff0f40abc60016472a92.mockapi.io/submitdata_all', JSON.parse(JSON.stringify(data)))
+          .then(function (response) {
+            Toast.show({
+              text1: 'Successfully sent to server',
+              text2: JSON.stringify(data)
+            });
+            
+              
+            
+        
+          })
+          .catch(function (error) {
+            Toast.show({
+              text1: 'Oops Something Bad Happend',
+            
+            });
+             
+            console.log(error);
+          });
+            await AsyncStorage.setItem('property'+this.props.propertyListedNumber,'4')
+                this.props.setAll(this.props.roomFacility,false,true);
+
             }
        
         
        
         return (
-            this.state.showRender?
+            this.props.showRender?
             <ScrollView>
             <View
                
@@ -111,24 +137,28 @@ export default class RoomFacilities extends Component{
                     }}>
                     <Text>Fan: </Text>
                         <Switch  
-                    value={this.state.roomFacility[index].Fan}  
+                    value={this.props.roomFacility[index].Fan}  
                     onValueChange ={(switchValue)=>{
+
+                       const newObject={...this.props.roomFacility};
+                       newObject[index].Fan=switchValue
+                       this.props.setAll(newObject,true,false)
                         
-                        const newObject = {...this.state}
+                        // const newObject = {...this.state}
                        
-                        const newArray = newObject.roomFacility[index];
+                        // const newArray = newObject.roomFacility[index];
                        
                         
                         
-                            newArray.Fan=switchValue;
-                            newObject.roomFacility[index]=newArray;
+                        //     newArray.Fan=switchValue;
+                        //     newObject.roomFacility[index]=newArray;
                           
 
                       
                         
-                        this.setState({
-                            roomFacility: newObject.roomFacility
-                            });
+                        // this.setState({
+                        //     roomFacility: newObject.roomFacility
+                        //     });
                         
                     }
             
@@ -149,24 +179,12 @@ export default class RoomFacilities extends Component{
                     }}>
                     <Text>AC: </Text>
                         <Switch  
-                    value={this.state.roomFacility[index].AC}  
+                     value={this.props.roomFacility[index].AC}  
                     onValueChange ={(switchValue)=>{
                         
-                        const newObject = {...this.state}
-                       
-                        const newArray = newObject.roomFacility[index];
-                       
-                        
-                        
-                            newArray.AC=switchValue;
-                            newObject.roomFacility[index]=newArray;
-                          
-
-                      
-                        
-                        this.setState({
-                            roomFacility: newObject.roomFacility
-                            });
+                        const newObject={...this.props.roomFacility};
+                       newObject[index].AC=switchValue
+                       this.props.setAll(newObject,true,false)
                         
                     }
             
@@ -187,24 +205,12 @@ export default class RoomFacilities extends Component{
                     }}>
                     <Text>Light: </Text>
                         <Switch  
-                    value={this.state.roomFacility[index].Light}  
+                     value={this.props.roomFacility[index].Light}   
                     onValueChange ={(switchValue)=>{
                         
-                        const newObject = {...this.state}
-                       
-                        const newArray = newObject.roomFacility[index];
-                       
-                        
-                        
-                            newArray.Light=switchValue;
-                            newObject.roomFacility[index]=newArray;
-                          
-
-                      
-                        
-                        this.setState({
-                            roomFacility: newObject.roomFacility
-                            });
+                        const newObject={...this.props.roomFacility};
+                       newObject[index].Light=switchValue
+                       this.props.setAll(newObject,true,false)
                         
                     }
             
@@ -225,24 +231,12 @@ export default class RoomFacilities extends Component{
                     }}>
                     <Text>Fridge: </Text>
                         <Switch  
-                    value={this.state.roomFacility[index].Fridge}  
+                     value={this.props.roomFacility[index].Fridge}  
                     onValueChange ={(switchValue)=>{
                         
-                        const newObject = {...this.state}
-                       
-                        const newArray = newObject.roomFacility[index];
-                       
-                        
-                        
-                            newArray.Fridge=switchValue;
-                            newObject.roomFacility[index]=newArray;
-                          
-
-                      
-                        
-                        this.setState({
-                            roomFacility: newObject.roomFacility
-                            });
+                        const newObject={...this.props.roomFacility};
+                       newObject[index].Fridge=switchValue
+                       this.props.setAll(newObject,true,false)
                         
                     }
             
@@ -263,24 +257,12 @@ export default class RoomFacilities extends Component{
                     }}>
                     <Text>TV: </Text>
                         <Switch  
-                    value={this.state.roomFacility[index].TV}  
+                     value={this.props.roomFacility[index].TV}   
                     onValueChange ={(switchValue)=>{
+                        const newObject={...this.props.roomFacility};
+                       newObject[index].TV=switchValue
+                       this.props.setAll(newObject,true,false)
                         
-                        const newObject = {...this.state}
-                       
-                        const newArray = newObject.roomFacility[index];
-                       
-                        
-                        
-                            newArray.TV=switchValue;
-                            newObject.roomFacility[index]=newArray;
-                          
-
-                      
-                        
-                        this.setState({
-                            roomFacility: newObject.roomFacility
-                            });
                         
                     }
             
@@ -317,14 +299,38 @@ export default class RoomFacilities extends Component{
         fontWeight:'bold'}}>Next</Text>
       </TouchableOpacity>
                 </View>
-                </ScrollView>:this.state.showImagePicker?<ImagePicker
+                </ScrollView>:this.props.showImagePicker?<ImagePicker
                                                 propertyType={this.props.propertyType}
-                                                propertyFacilities={this.props.propertyFacilities}
+                                                stepsCompleted={this.props.stepsCompleted==3? 4:this.props.stepsCompleted}
+                                                propertyListedNumber={this.props.propertyListedNumber}
                                                 numberOfRooms={this.props.numberOfRooms}
-                                                roomFacilities={this.state.roomFacility}
+                                                
                 
                  />:null
 
         )
     }
 }
+
+
+const mapStateToProps = (state) => {
+    //console.log(state);
+    return {
+        roomFacility:state.RoomFacilityReducer.roomFacility,
+        showRender:state.RoomFacilityReducer.showRender,
+        showImagePicker:state.RoomFacilityReducer.showImagePicker
+    }
+  }
+  
+  
+  const mapDispatchToProps = (dispatch) => {
+   
+    return {
+      setAll: (data,showRender,showImagePicker) => dispatch({type:'SET_ROOM_SHOWRENDER',data:data,showRender:showRender,showImagePicker:showImagePicker})
+      
+      
+    }
+  }
+
+
+  export default  connect(mapStateToProps,mapDispatchToProps)(RoomFacilities);
